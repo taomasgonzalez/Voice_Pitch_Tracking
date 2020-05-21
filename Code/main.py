@@ -9,57 +9,9 @@ import os
 AUDIO_PATH = ".\\Audios\\"
 
 
-def isfloat(value):
-    try:
-        float(value)
-        return True
-    except ValueError:
-        return False
-
-
-# Valida que un string recibido sea un numero natural
-def is_valid_number(arg):
-    if isfloat(arg):    # valido el argumento
-        arg_f = float(arg)
-        if arg_f <= 0:
-            return "El numero ingresado debe ser positivo\n"
-        elif arg_f == float("inf") or arg_f >= 10e9:
-            return "El numero ingresado debe tener un valor finito\n"
-
-    else:
-        return "Error de sintaxis\n"
-
-    return "Ok"     # El numero parece ser valido
-
-
-def get_wav_file_from_user():
-    valid = False
-    i = 0
-    wav_dict = dict()
-    for file in os.listdir(AUDIO_PATH):
-        i += 1
-        if file.endswith(".wav"):
-            print(str(i)+')'+file)
-            wav_dict[i] = file
-    while not valid:
-        num_str = input("Por favor seleccione el .wav deseado ingresando el numero previo al nombre\n")
-        result_str = is_valid_number(num_str)
-        if result_str == 'Ok':
-            num = int(num_str)
-            if num in wav_dict:
-                valid = True
-                file_name = wav_dict[num]
-                return file_name
-        else:
-            valid = False
-            print(result_str)
-
-
-def create_midi():
+def create_midi(file_path):
     # obtengo el audio monofónico 
-    instrument = 1      # Grand Piano -- despues habria que agregar un diccionario si hace falta
-    file_name = "punteoSongPiano"
-    file_path = AUDIO_PATH + file_name + ".wav"
+    instrument = 1      # Grand Piano
 
     fs, audio = wav.read(file_path)
     audio_mono = audio[:, 1]
@@ -67,14 +19,16 @@ def create_midi():
     midi_filer = MidiBuilder(1000, instrument)
 
     # get the window intervals to partition the audio
-    note_segments = SDA.notesSegmentation(audio_mono, fs, SDA.HFC)
+    note_segments = SDA.notes_segmentation(audio_mono, fs, SDA.HFC)
 
     # find the pitch of each segment. notes_fo[i] will be -1 if the segment is unvoiced
-    pitches_fo = PDA.assign_pitch(audio_mono, fs, note_segments, PDA.autocorrelationAlgorithm)
+    freqs_fo, pitches_fo = PDA.assign_pitch(audio_mono, fs, note_segments, PDA.YIN)
 
     # Se genera el archivo midi correspondiente para corroborar que se detectaron las notas correctamente
     midi_filer.play_notes(note_segments, fs, pitches_fo, file_name)
 
+    # A partir de la frecuencia fundamental de cada nota se averigua el nombre de las mismas
+    # notes_name = PDA.translateNotes(pitches_fo)
     # Se muestran gráficamente el resultado
     # front.show_results(notes_name, note_segments, audio_mono)
 
@@ -91,7 +45,8 @@ def create_midi():
 #     # error
 #     print("Opcion invalida\n")
 
-create_midi()
+file_name = "punteoSongPiano"
+create_midi(AUDIO_PATH + file_name + ".wav")
 
 
 

@@ -53,7 +53,7 @@ def optimizeNote(noteData,frames):
 
 # Si no encuentra frecuencia fundamental, devuelve fo = 44100
 # Cuanto mas grande noteData mejor la aproximacion a la fpitch (aprox 3000 minimo)
-def autocorrelationAlgorithm(noteData,fs,frames = 10000, clippingStage = "True"):
+def autocorrelationAlgorithm(noteData, fs, frames=10000, clippingStage="True"):
     fo = 0
     # selecciono mejor parte de la nota
     #plt.figure(1)
@@ -264,13 +264,17 @@ def assign_pitch(data_in, fs, segments, algorithm):
 
     n_windows = len(segments[:])
     notes_fo = np.zeros(n_windows, dtype=int)
+    freqs_fo = np.zeros(n_windows, dtype=int)
+
     for i in range(0, n_windows):
         if is_voiced(data_in[segments[i][0]:segments[i][1]]):
-            notes_fo[i] = freqToPitch(algorithm(data_in[segments[i][0]:segments[i][1]], fs))
+            freqs_fo[i] = algorithm(data_in[segments[i][0]:segments[i][1]], fs)
+            notes_fo[i] = freqToPitch(freqs_fo[i])
         else:
             notes_fo[i] = -1
 
-    return notes_fo
+    return freqs_fo, notes_fo
+
 
 def translateNotes(notesFo):
     midiKeyBegin = 21
