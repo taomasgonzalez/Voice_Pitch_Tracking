@@ -1,7 +1,7 @@
 import numpy as np
 import peakutils
-from scipy.signal import fftconvolve , find_peaks , decimate
-from scipy.fftpack import rfft , irfft , ifftshift
+from scipy.signal import fftconvolve, find_peaks, decimate
+from scipy.fftpack import rfft, irfft, ifftshift
 from collections import deque
 import os
 
@@ -18,12 +18,12 @@ def sgn(data):
     auxData2 = data[lastThird:]
     max1 = np.amax(auxData1)
     max2 = np.amax(auxData2)
-    max = min(max1,max2)
-    #max = np.amax(data)
+    max = min(max1, max2)
+    # max = np.amax(data)
     Cl = 0.68*max
     # aplico transformacion
     data = np.array(data)
-    for i in range(0,len(data)):
+    for i in range(0, len(data)):
         if data[i] >= Cl:
             data[i] = 1
         elif data[i] <= -Cl:
@@ -43,7 +43,7 @@ def optimizeNote(noteData,frames):
     length = len(noteData)
     i = 0
     f = length
-    if  not (argMax - round(frames/2) <= 0):
+    if not (argMax - round(frames/2) <= 0):
         i = argMax - round(frames/2)
     if not (argMax + frames - (argMax - i) >= length):
         f = argMax + frames - (argMax - i)
@@ -53,15 +53,15 @@ def optimizeNote(noteData,frames):
 
 # Si no encuentra frecuencia fundamental, devuelve fo = 44100
 # Cuanto mas grande noteData mejor la aproximacion a la fpitch (aprox 3000 minimo)
-def autocorrelationAlgorithm(noteData, fs, frames=10000, clippingStage="True"):
+def autocorrelationAlgorithm(noteData, fs, frames=10000, clippingStage=True):
     fo = 0
     # selecciono mejor parte de la nota
-    #plt.figure(1)
-    #plt.plot(noteData)
-    noteData = optimizeNote(noteData,frames)
-    #plt.figure(2)
-    #plt.plot(noteData)
-    #plt.show()
+    # plt.figure(1)
+    # plt.plot(noteData)
+    # noteData = optimizeNote(noteData, frames)
+    # plt.figure(2)
+    # plt.plot(noteData)
+    # plt.show()
     # autocorrelacion
     if clippingStage:
         x1 = sgn(noteData)
@@ -73,20 +73,20 @@ def autocorrelationAlgorithm(noteData, fs, frames=10000, clippingStage="True"):
     correlation = correlation[correlation.size//2:]
     # busco primer maximo
     max = 0.3*np.amax(correlation)
-    peaks = find_peaks(correlation,max, distance = 21)
+    peaks = find_peaks(correlation, max, distance=21)
 
     if len(peaks[0]) > 0:
         xMax = peaks[0][0]
     else:
         xMax = 1
     # determino frequencia
-    fo=fs/xMax
+    fo = fs/xMax
     return fo
 
 
 def harmonicProductSpectrum(noteData,fs,frames = 20000,hNro = 7):
     fo = 0
-    noteData = optimizeNote(noteData,frames)
+    #noteData = optimizeNote(noteData,frames)
     # aplico ventana
     window = np.hanning(len(noteData))
     noteData = np.multiply(window,noteData)
@@ -168,7 +168,7 @@ def differenceFunction(data, tauMax, fs, form='fft'):
     return diff
 
 
-def CMDF(diff): # cumulative mean normalized difference function
+def CMDF(diff):     # cumulative mean normalized difference function
     cmdf = []
     cmdf.append(1)
     for i in range(1,len(diff)):
@@ -194,7 +194,7 @@ def selectFoSample(cmdf, th):
 
 def YIN(noteData, fs, tauMax = 1/40, frames=1470*2, form='cumsum', th=0.13):
     fo = 0
-    noteData = optimizeNote(noteData,frames)
+    # noteData = optimizeNote(noteData,frames)
     diff = differenceFunction(noteData,tauMax,fs,form)
     cmdf = CMDF(diff)   # ver lo de division por cero
     n = selectFoSample(cmdf,th)
@@ -257,7 +257,7 @@ def getWavPitch(audio, fs, wLen=4096, wStep=2048, fMin= 40):
 
 
 def is_voiced(window):
-    pass
+    return True
 
 
 def assign_pitch(data_in, fs, segments, algorithm):
@@ -268,7 +268,8 @@ def assign_pitch(data_in, fs, segments, algorithm):
 
     for i in range(0, n_windows):
         if is_voiced(data_in[segments[i][0]:segments[i][1]]):
-            freqs_fo[i] = algorithm(data_in[segments[i][0]:segments[i][1]], fs)
+            f = algorithm(data_in[segments[i][0]:segments[i][1]], fs)
+            freqs_fo[i] = f
             notes_fo[i] = freqToPitch(freqs_fo[i])
         else:
             notes_fo[i] = -1
@@ -290,7 +291,7 @@ def translateNotes(notesFo):
 
     Nnotes = len(notesFo)
 
-    notesTranslated = [] #Se crea una lista para las notas traducidas
+    notesTranslated = []     # Se crea una lista para las notas traducidas
 
     for i in range(0, Nnotes):
         if isValidMidiKey(notesFo[i]):

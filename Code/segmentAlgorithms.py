@@ -2,8 +2,8 @@ import numpy as np
 
 
 def notes_segmentation(signal_len, fs, window_seconds, overlap_seconds):
-    n_samples = int(fs * window_seconds)      # 30 ms for each window
-    n_overlap = int(fs * overlap_seconds)
+    n_samples = int(fs * window_seconds)      # 32 ms for each window
+    n_overlap = int(fs * overlap_seconds)     # 10 ms for overlap
 
     i = 0
     segments = []
