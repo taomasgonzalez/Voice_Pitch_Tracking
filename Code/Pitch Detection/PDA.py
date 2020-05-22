@@ -1,5 +1,4 @@
 import numpy as np
-import peakutils
 from scipy.signal import fftconvolve , find_peaks , decimate
 from scipy.fftpack import rfft , irfft , ifftshift
 from collections import deque
@@ -33,24 +32,6 @@ def sgn(data):
     return data
 
 
-def optimizeNote(noteData,frames):
-    max = np.amax(noteData)
-    noteData = deque(noteData)
-    while noteData[0] < 0.1*max:
-        noteData.popleft()
-    noteData = np.array(noteData)
-    argMax = np.argmax(noteData)
-    length = len(noteData)
-    i = 0
-    f = length
-    if  not (argMax - round(frames/2) <= 0):
-        i = argMax - round(frames/2)
-    if not (argMax + frames - (argMax - i) >= length):
-        f = argMax + frames - (argMax - i)
-    noteData = noteData[i:f]
-    return noteData
-
-
 # Si no encuentra frecuencia fundamental, devuelve fo = 44100
 # Cuanto mas grande noteData mejor la aproximacion a la fpitch (aprox 3000 minimo)
 def autocorrelationAlgorithm(noteData,fs,frames = 10000, clippingStage = "True"):
@@ -58,7 +39,6 @@ def autocorrelationAlgorithm(noteData,fs,frames = 10000, clippingStage = "True")
     # selecciono mejor parte de la nota
     #plt.figure(1)
     #plt.plot(noteData)
-    noteData = optimizeNote(noteData,frames)
     #plt.figure(2)
     #plt.plot(noteData)
     #plt.show()
@@ -86,7 +66,6 @@ def autocorrelationAlgorithm(noteData,fs,frames = 10000, clippingStage = "True")
 
 def harmonicProductSpectrum(noteData,fs,frames = 20000,hNro = 7):
     fo = 0
-    noteData = optimizeNote(noteData,frames)
     # aplico ventana
     window = np.hanning(len(noteData))
     noteData = np.multiply(window,noteData)
@@ -126,7 +105,7 @@ def harmonicProductSpectrum(noteData,fs,frames = 20000,hNro = 7):
 
 
 def cepstrum(noteData,fs,frames = 3000):
-    noteData = optimizeNote(noteData,frames)
+
     # aplico ventana
     window = np.hanning(len(noteData))
     noteData = np.multiply(window,noteData)
@@ -195,7 +174,6 @@ def selectFoSample(cmdf,th):
 
 def YIN(noteData,fs,tauMax = 1/40,frames= 1470*2,form = 'cumsum',th = 0.13):
     fo = 0
-    noteData = optimizeNote(noteData,frames)
     diff = differenceFunction(noteData,tauMax,fs,form)
     cmdf = CMDF(diff) # ver lo de division por cero
     n = selectFoSample(cmdf,th)
