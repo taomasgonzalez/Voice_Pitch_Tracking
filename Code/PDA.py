@@ -1,5 +1,4 @@
 import numpy as np
-import peakutils
 from scipy.signal import fftconvolve, find_peaks, decimate
 from scipy.fftpack import rfft, irfft, ifftshift
 from collections import deque
