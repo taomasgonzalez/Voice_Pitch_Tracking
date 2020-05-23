@@ -78,7 +78,7 @@ def autocorrelationAlgorithm(noteData, fs, frames=10000, clippingStage=True):
     if len(peaks[0]) > 0:
         xMax = peaks[0][0]
     else:
-        xMax = 1
+        xMax = -fs
     # determino frequencia
     fo = fs / xMax
     return fo
