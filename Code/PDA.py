@@ -64,11 +64,11 @@ def autocorrelationAlgorithm(noteData, fs, frames=10000, clippingStage=True):
     # plt.show()
     # autocorrelacion
     if clippingStage:
-        x1 = sgn(noteData)
-        x2 = sgn(noteData[::-1])
+        x1 = sgn(noteData[0])
+        x2 = sgn(noteData[1][::-1])
     else:
-        x1 = noteData
-        x2 = noteData[::-1]
+        x1 = noteData[0]
+        x2 = noteData[1][::-1]
     correlation = fftconvolve(x1, x2, mode='full')
     correlation = correlation[correlation.size // 2:]
     # busco primer maximo
