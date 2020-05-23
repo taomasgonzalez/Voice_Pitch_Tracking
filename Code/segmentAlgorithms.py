@@ -12,7 +12,7 @@ def notes_segmentation(signal_len, fs, window_seconds, overlap_seconds):
 
     while True:
         if (i + n_samples + n_max_freq) < signal_len:
-            segments.append([[i, i + n_samples],i, i + n_samples+n_max_freq])
+            segments.append([i, i + n_samples+n_max_freq])
             i += n_overlap
         else:
             break
