@@ -53,7 +53,7 @@ def optimizeNote(noteData, frames):
 
 # Si no encuentra frecuencia fundamental, devuelve fo = 44100
 # Cuanto mas grande noteData mejor la aproximacion a la fpitch (aprox 3000 minimo)
-def autocorrelationAlgorithm(noteData, fs, frames=10000, clippingStage=False):
+def autocorrelationAlgorithm(noteData, fs, frames=10000, clippingStage=True):
     fo = 0
     # selecciono mejor parte de la nota
     # plt.figure(1)
