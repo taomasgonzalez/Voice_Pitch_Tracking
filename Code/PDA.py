@@ -207,7 +207,7 @@ def YIN(noteData, fs, tauMax=1 / 40, frames=1470 * 2, form='cumsum', th=0.13):
 
 def freqToPitch(freq):
     pitch = 0
-    if freq != 0:
+    if freq > 0:
         pitch = round(12 * np.log2(freq / 440) + 69)
     return pitch
 
