@@ -283,8 +283,8 @@ def assign_pitch(data_in, fs, segments, algorithm):
     freqs_fo = np.zeros(n_windows, dtype=int)
 
     for i in range(0, n_windows):
+        #print("De ",segments[i][0]/fs,"sec a ", segments[i][1]/fs," sec")
         if segments[i][0] == 1:
-            print("De ",segments[i][0]/fs,"sec a ", segments[i][1]/fs," sec")
             f = algorithm(data_in[segments[i][1]:segments[i][2]], fs)
             freqs_fo[i] = f
             notes_fo[i] = freqToPitch(freqs_fo[i])
