@@ -72,6 +72,8 @@ def autocorrelationAlgorithm(noteData, fs, clippingStage=True):
         xMax = -fs
     # determino frequencia
     fo = fs / xMax
+    if fo == -1 or fo>500:
+        fo=0
     return fo
 
 
@@ -157,6 +159,9 @@ def differenceFunction(data, tauMax, fs, form='fft'):
     return diff
 
 
+#Taumax is defined depending if this algorithm is used with a female or male speaker
+#For males Taumax=650
+#For females Taumax=350
 def YIN(data, fs, tauMax=1 / 40, form='cumsum', th=0.13):
 
     # let s call len(data) = w
@@ -166,6 +171,7 @@ def YIN(data, fs, tauMax=1 / 40, form='cumsum', th=0.13):
     # where power = sum(j = 1, w, x^2(j))
     # and z(tau) = sum(j = 1, w, x^2(j+w))
     t = int(fs * tauMax)
+    t=len(data)
     power = 0
     sub_powers = list()
 
@@ -189,7 +195,6 @@ def YIN(data, fs, tauMax=1 / 40, form='cumsum', th=0.13):
             # may be optimized filling the rest with zeroes directly
             sub_powers.append(0)
 
-
     correl = fftconvolve(data, data[::-1], mode='full')
     correl = correl[correl.size // 2:]
 
@@ -209,15 +214,21 @@ def YIN(data, fs, tauMax=1 / 40, form='cumsum', th=0.13):
 
     # find fundamental frequency
     n = 0
-    peaks = find_peaks(np.multiply(-1, cmdf), -th)
-    if len(peaks[0]) > 0:
-        n = peaks[0][0]
-        plt.plot(np.multiply(-1, cmdf))
-        plt.show()
-    if n > 0:
+    #cmdf=cmdf[::-1]
+    peaks, _  = find_peaks(np.multiply(-1, cmdf), -th)
+    #plt.plot(np.multiply(-1, cmdf))
+    if len(peaks) > 0:
+        n = peaks[0]
+    #    plt.plot(peaks, np.multiply(-1, cmdf)[peaks], "x")
+    else:
+        n=np.argmax(np.multiply(-1, cmdf))
+    #plt.show()
+    if n > 0 and n<350:
         fo = fs / n
     else:
-        fo = fs
+        fo = 0
+    if fo>400:
+        fo=0
 
     return fo
 
