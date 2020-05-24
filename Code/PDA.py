@@ -20,7 +20,7 @@ def sgn(data):
     max2 = np.amax(auxData2)
     max = min(max1, max2)
     # max = np.amax(data)
-    Cl = 0.68 * max
+    Cl = 0.70 * max
     # aplico transformacion
     data = np.array(data)
     for i in range(0, len(data)):
@@ -63,27 +63,35 @@ def autocorrelationAlgorithm(noteData, fs, frames=10000, clippingStage=True):
     # plt.plot(noteData)
     # plt.show()
     # autocorrelacion
+    x1=np.zeros(len(noteData))
     if clippingStage:
-        x1 = sgn(noteData[:-int(fs/500)])
-        print(x1.shape)
+        x1[:-int(fs/500)] = sgn(noteData[:-int(fs/500)])
         x2 = sgn(noteData[::-1])
-        print(x2.shape)
     else:
-        x1 = noteData[:-int(fs/500)]
+        x1[:-int(fs/500)] = noteData[:-int(fs/500)]
         x2 = noteData[::-1]
+    
     correlation = fftconvolve(x1, x2, mode='full')
     correlation = correlation[correlation.size // 2:]
+    
     # busco primer maximo
-    max = 0.3 * np.amax(correlation)
-    peaks = find_peaks(correlation, max, distance=21)
+    max = 0.5* np.amax(correlation)
+    peaks, _ = find_peaks(correlation, height=max, distance=21)
 
-    if len(peaks[0]) > 0:
-        xMax = peaks[0][0]
+    """plt.plot(correlation)
+    print(peaks)
+    if len(peaks) > 0:
+      plt.plot(peaks, correlation[peaks], "x")
+    plt.show()"""
+
+    if len(peaks) > 0:
+        xMax = peaks[0]
     else:
         xMax = -fs
     # determino frequencia
     fo = fs / xMax
     return fo
+
 
 
 def harmonicProductSpectrum(noteData, fs, frames=20000, hNro=7):
@@ -211,7 +219,7 @@ def freqToPitch(freq):
     pitch = 0
     if freq > 0:
         pitch = round(12 * np.log2(freq / 440) + 69)
-    return pitch
+    return pitch 
 
 
 def getWavPitch(audio, fs, wLen=4096, wStep=2048, fMin=40):
@@ -268,12 +276,13 @@ def assign_pitch(data_in, fs, segments, algorithm):
     freqs_fo = np.zeros(n_windows, dtype=int)
 
     for i in range(0, n_windows):
-        if is_voiced(data_in[segments[i][0]:segments[i][1]]):
-            f = algorithm(data_in[segments[i][0]:segments[i][1]], fs)
+        if segments[i][0] == 1:
+            #print("De ",segments[i][0]/fs,"sec a ", segments[i][1]/fs," sec")
+            f = algorithm(data_in[segments[i][1]:segments[i][2]], fs)
             freqs_fo[i] = f
             notes_fo[i] = freqToPitch(freqs_fo[i])
         else:
-            notes_fo[i] = -1
+            notes_fo[i] = 0
 
     return freqs_fo, notes_fo
 
