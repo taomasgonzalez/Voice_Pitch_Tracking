@@ -15,14 +15,14 @@ def create_midi(file_path):
 
     fs, audio = wav.read(file_path)
     audio_mono = audio
-
+    audio_mono = audio_mono / max(audio_mono)
     midi_filer = MidiBuilder(1000, instrument)
 
     # get the window intervals to partition the audio
     note_segments = SDA.notes_segmentation(len(audio_mono), fs, window_seconds=0.032, overlap_seconds=0.01)
 
     # find the pitch of each segment. notes_fo[i] will be -1 if the segment is unvoiced
-    freqs_fo, pitches_fo = PDA.assign_pitch(audio_mono, fs, note_segments, PDA.autocorrelationAlgorithm)
+    freqs_fo, pitches_fo = PDA.assign_pitch(audio_mono, fs, note_segments, PDA.YIN)
 
     # with open('somefile.txt', 'a') as the_file:
     #     for freq_fo in freqs_fo:

@@ -33,32 +33,13 @@ def sgn(data):
     return data
 
 
-def optimizeNote(noteData, frames):
-    max = np.amax(noteData)
-    noteData = deque(noteData)
-    while noteData[0] < 0.1 * max:
-        noteData.popleft()
-    noteData = np.array(noteData)
-    argMax = np.argmax(noteData)
-    length = len(noteData)
-    i = 0
-    f = length
-    if not (argMax - round(frames / 2) <= 0):
-        i = argMax - round(frames / 2)
-    if not (argMax + frames - (argMax - i) >= length):
-        f = argMax + frames - (argMax - i)
-    noteData = noteData[i:f]
-    return noteData
-
-
 # Si no encuentra frecuencia fundamental, devuelve fo = 44100
 # Cuanto mas grande noteData mejor la aproximacion a la fpitch (aprox 3000 minimo)
-def autocorrelationAlgorithm(noteData, fs, frames=10000, clippingStage=True):
+def autocorrelationAlgorithm(noteData, fs, clippingStage=True):
     fo = 0
     # selecciono mejor parte de la nota
     # plt.figure(1)
     # plt.plot(noteData)
-    # noteData = optimizeNote(noteData, frames)
     # plt.figure(2)
     # plt.plot(noteData)
     # plt.show()
@@ -84,9 +65,8 @@ def autocorrelationAlgorithm(noteData, fs, frames=10000, clippingStage=True):
     return fo
 
 
-def harmonicProductSpectrum(noteData, fs, frames=20000, hNro=7):
+def harmonicProductSpectrum(noteData, fs, hNro=7):
     fo = 0
-    # noteData = optimizeNote(noteData,frames)
     # aplico ventana
     window = np.hanning(len(noteData))
     noteData = np.multiply(window, noteData)
@@ -125,8 +105,7 @@ def harmonicProductSpectrum(noteData, fs, frames=20000, hNro=7):
     return fo
 
 
-def cepstrum(noteData, fs, frames=3000):
-    noteData = optimizeNote(noteData, frames)
+def cepstrum(noteData, fs):
     # aplico ventana
     window = np.hanning(len(noteData))
     noteData = np.multiply(window, noteData)
@@ -168,40 +147,64 @@ def differenceFunction(data, tauMax, fs, form='fft'):
     return diff
 
 
-def CMDF(diff):  # cumulative mean normalized difference function
-    cmdf = []
-    cmdf.append(1)
-    for i in range(1, len(diff)):
-        sum = 0
-        for j in range(1, i):
-            sum += diff[j]
-        if sum != 0:
-            aux = (i * diff[i]) / sum
+def YIN(data, fs, tauMax=1 / 40, form='cumsum', th=0.13):
+
+    # let s call len(data) = w
+    # we will start by calculating DF = sum(j = 1, w, (x(j) - x(j+tau))^2)
+    # DF = sum(j=1, w, x(j) ^ 2) -2 * sum(j=1, w, x(j)*x(j+tau)) + sum(j=1, w, x(j+tau) ^ 2)
+    # calculate power and z(tau)
+    # where power = sum(j = 1, w, x^2(j))
+    # and z(tau) = sum(j = 1, w, x^2(j+w))
+    t = int(fs * tauMax)
+    power = 0
+    sub_powers = list()
+
+    for i in range(1, len(data)):
+        power += data[i]**2
+
+    # z(tau) = sum(j = 1, w, x^2(j+w)) = sum(j = tau + 1, w + tau, x^2(j))
+    # z(tau) = sum(j = tau + 1, w, x^2(j)) as x(w+1) = 0 and so on...
+    # z(tau) = sum(j=1, w, x ^ 2(j))  - sum(j=1, tau, x ^ 2(j))
+    # z(tau) = sum(j=1, w, x ^ 2(j)) - sum(j=1, tau, x ^ 2(j))
+    # z(tau) = power - sum(j=1, tau, x ^ 2(j))
+    # tau can take values from tau = 1 to t
+    sub_powers.append(0)       # j = 0, no power just in case.
+    sub_powers.append(power - data[1]**2)
+
+    for i in range(2, t):
+
+        if i < len(data):
+            sub_powers.append(sub_powers[i-1] - data[i-1]**2)
         else:
-            aux = (i * diff[i]) / (10 ** (-10))
-        cmdf.append(aux)
-    return cmdf
+            # may be optimized filling the rest with zeroes directly
+            sub_powers.append(0)
 
+    correl = fftconvolve(data, data)
+    # should not add 1 as first value, as we will just be needing diff to claculate cmdf
+    diff = np.array([power - 2 * correl[i] + sub_powers[i] for i in range(1, t)], dtype=np.int64)
 
-def selectFoSample(cmdf, th):
-    sample = 0
-    invCmdf = np.multiply(-1, cmdf)
-    peaks = find_peaks(invCmdf, -th)
+    cmdf = list()
+    cmdf.append(1)
+    g_tau = 0
+
+    for i in range(len(diff)):
+        g_tau = g_tau + diff[i]
+        if g_tau != 0:
+            cmdf.append((i + 1) * diff[i] / g_tau)
+        else:
+            cmdf.append((i + 1) * diff[i] / (10 ** (-10)))
+
+    # find fundamental frequency
+    n = 0
+    peaks = find_peaks(np.multiply(-1, cmdf), -th)
     if len(peaks[0]) > 0:
-        sample = peaks[0][0]
-    return sample
+        n = peaks[0][0]
 
-
-def YIN(noteData, fs, tauMax=1 / 40, frames=1470 * 2, form='cumsum', th=0.13):
-    fo = 0
-    # noteData = optimizeNote(noteData,frames)
-    diff = differenceFunction(noteData, tauMax, fs, form)
-    cmdf = CMDF(diff)  # ver lo de division por cero
-    n = selectFoSample(cmdf, th)
     if n > 0:
         fo = fs / n
     else:
         fo = fs
+
     return fo
 
 
