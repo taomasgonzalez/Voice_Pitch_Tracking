@@ -8,6 +8,7 @@ import os
 
 AUDIO_PATH = ".\\Audios\\"
 
+import matplotlib.pyplot as plt
 
 def create_midi(file_path):
     # obtengo el audio monofónico 
@@ -16,6 +17,8 @@ def create_midi(file_path):
     fs, audio = wav.read(file_path)
     audio_mono = audio
     audio_mono = audio_mono / max(audio_mono)
+    audio_mono = audio_mono[183000:200000]
+
     midi_filer = MidiBuilder(1000, instrument)
 
     # get the window intervals to partition the audio
@@ -24,9 +27,6 @@ def create_midi(file_path):
     # find the pitch of each segment. notes_fo[i] will be -1 if the segment is unvoiced
     freqs_fo, pitches_fo = PDA.assign_pitch(audio_mono, fs, note_segments, PDA.YIN)
 
-    # with open('somefile.txt', 'a') as the_file:
-    #     for freq_fo in freqs_fo:
-    #         the_file.write(freq_fo + '\n')
     print(freqs_fo)
     # Se genera el archivo midi correspondiente para corroborar que se detectaron las notas correctamente
     # midi_filer.play_notes(note_segments, fs, pitches_fo, file_name)

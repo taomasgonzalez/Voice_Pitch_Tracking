@@ -2,6 +2,7 @@ import numpy as np
 from scipy.signal import fftconvolve, find_peaks, decimate
 from scipy.fftpack import rfft, irfft, ifftshift
 from collections import deque
+import matplotlib.pyplot as plt
 import os
 
 
@@ -179,7 +180,7 @@ def YIN(data, fs, tauMax=1 / 40, form='cumsum', th=0.13):
             # may be optimized filling the rest with zeroes directly
             sub_powers.append(0)
 
-    correl = fftconvolve(data, data)
+    correl = fftconvolve(data, data, mode='same')
     # should not add 1 as first value, as we will just be needing diff to claculate cmdf
     diff = np.array([power - 2 * correl[i] + sub_powers[i] for i in range(1, t)], dtype=np.int64)
 
@@ -199,7 +200,8 @@ def YIN(data, fs, tauMax=1 / 40, form='cumsum', th=0.13):
     peaks = find_peaks(np.multiply(-1, cmdf), -th)
     if len(peaks[0]) > 0:
         n = peaks[0][0]
-
+        plt.plot(np.multiply(-1, cmdf))
+        plt.show()
     if n > 0:
         fo = fs / n
     else:
