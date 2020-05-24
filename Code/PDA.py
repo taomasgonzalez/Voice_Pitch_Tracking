@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.signal import fftconvolve, find_peaks, decimate
+from scipy.fft import dct
 from scipy.fftpack import rfft, irfft, ifftshift
 from collections import deque
 import matplotlib.pyplot as plt
@@ -72,18 +73,22 @@ def autocorrelationAlgorithm(noteData, fs, clippingStage=True):
         xMax = -fs
     # determino frequencia
     fo = fs / xMax
-    if fo == -1 or fo>500:
+    if fo == -1 or fo>500 or fo < 80:
         fo=0
     return fo
 
 
-def harmonicProductSpectrum(noteData, fs, hNro=7):
+
+def harmonicProductSpectrum(noteData, fs,form="fft", hNro=4):
     fo = 0
     # aplico ventana
     window = np.hanning(len(noteData))
     noteData = np.multiply(window, noteData)
     # fft de los datos
-    fftData = rfft(noteData)
+    if form=="fft":
+      fftData =rfft(noteData)
+    elif form=="dct":
+      fftData = dct(noteData)
     fftData = abs(fftData[:])
     k = np.arange(len(noteData))
     T = (2 * len(noteData)) / fs
@@ -113,8 +118,30 @@ def harmonicProductSpectrum(noteData, fs, hNro=7):
     for i in range(0, index):
         hpsArray[i] = 0
     # busco frecuencia del maximo de la nueva funcion
-    fo = fftF[np.argmax(hpsArray)]
+    max_hps = np.argmax(hpsArray)
+    fo = fftF[max_hps]
+    peaks, _  = find_peaks(hpsArray, height=hpsArray[max_hps]*0.65)
+    
+    sec_peak= 0
+    for k in range(len(peaks)):
+      if peaks[k] < max_hps*0.9 and peaks[k] > max_hps*0.4:
+        sec_peak=peaks[k]
+        ratio = np.array(hpsArray)[sec_peak]/np.array(hpsArray)[max_hps]
+        #print(ratio)
+        if ratio< 0.95 and ratio > 0.63:
+            fo =fftF[sec_peak]
+        break
+
+    """plt.plot(hpsArray)
+    if len(peaks) > 0:
+        print(peaks)
+        plt.plot(peaks, np.array(hpsArray)[peaks], "x")
+    plt.show()"""
+
+    if fo > 500 or fo<80:
+      fo= 0
     return fo
+
 
 
 def cepstrum(noteData, fs):
@@ -223,7 +250,7 @@ def YIN(data, fs, tauMax=1 / 40, form='cumsum', th=0.13):
     else:
         n=np.argmax(np.multiply(-1, cmdf))
     #plt.show()
-    if n > 0 and n<350:
+    if n > 0 and n<fs/80:
         fo = fs / n
     else:
         fo = 0
