@@ -189,9 +189,12 @@ def YIN(data, fs, tauMax=1 / 40, form='cumsum', th=0.13):
             # may be optimized filling the rest with zeroes directly
             sub_powers.append(0)
 
-    correl = fftconvolve(data, data, mode='same')
+
+    correl = fftconvolve(data, data[::-1], mode='full')
+    correl = correl[correl.size // 2:]
+
     # should not add 1 as first value, as we will just be needing diff to claculate cmdf
-    diff = np.array([power - 2 * correl[i] + sub_powers[i] for i in range(1, t)], dtype=np.int64)
+    diff = np.array([power - 2 * correl[i] + sub_powers[i] for i in range(1, t)], dtype=np.float64)
 
     cmdf = list()
     cmdf.append(1)
@@ -280,13 +283,11 @@ def assign_pitch(data_in, fs, segments, algorithm):
     freqs_fo = np.zeros(n_windows, dtype=int)
 
     for i in range(0, n_windows):
-        if segments[i][0] == 1:
+        # if segments[i][0] == 1:
             #print("De ",segments[i][0]/fs,"sec a ", segments[i][1]/fs," sec")
-            f = algorithm(data_in[segments[i][1]:segments[i][2]], fs)
-            freqs_fo[i] = f
-            notes_fo[i] = freqToPitch(freqs_fo[i])
-        else:
-            notes_fo[i] = 0
+        f = algorithm(data_in[segments[i][0]:segments[i][1]], fs)
+        freqs_fo[i] = f
+        notes_fo[i] = freqToPitch(freqs_fo[i])
 
     return freqs_fo, notes_fo
 

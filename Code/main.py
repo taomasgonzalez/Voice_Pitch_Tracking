@@ -5,10 +5,10 @@ import frontend as front
 from midiBuilder import MidiBuilder
 import GraphSpectrogram as gs
 import os
+import matplotlib.pyplot as plt
 
 AUDIO_PATH = ".\\Audios\\"
 
-import matplotlib.pyplot as plt
 
 def create_midi(file_path):
     # obtengo el audio monofónico 
@@ -17,7 +17,8 @@ def create_midi(file_path):
     fs, audio = wav.read(file_path)
     audio_mono = audio
     audio_mono = audio_mono / max(audio_mono)
-    audio_mono = audio_mono[183000:200000]
+    audio_mono = audio_mono[int(5.4*48000):int(5.6*48000)]
+
 
     midi_filer = MidiBuilder(1000, instrument)
 
@@ -51,7 +52,7 @@ def create_midi(file_path):
 
 # file_name = "punteoSongPiano"
 # create_midi(AUDIO_PATH + file_name + ".wav")
-create_midi("lar_F01_sa1" + ".wav")
+create_midi("mic_F01_sa1" + ".wav")
 
 
 
