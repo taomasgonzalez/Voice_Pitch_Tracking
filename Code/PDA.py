@@ -37,7 +37,7 @@ def sgn(data):
 
 # Si no encuentra frecuencia fundamental, devuelve fo = 44100
 # Cuanto mas grande noteData mejor la aproximacion a la fpitch (aprox 3000 minimo)
-def autocorrelationAlgorithm(noteData, fs, clippingStage=True):
+def autocorrelationAlgorithm(noteData, fs, gender, clippingStage=True):
     fo = 0
     # selecciono mejor parte de la nota
     # plt.figure(1)
@@ -73,13 +73,15 @@ def autocorrelationAlgorithm(noteData, fs, clippingStage=True):
         xMax = -fs
     # determino frequencia
     fo = fs / xMax
-    if fo == -1 or fo>500 or fo < 80:
+    if gender == "MALE"  and (fo == -1 or fo>350 or fo < 70):
+        fo=0
+    if gender == "FEMALE"  and (fo == -1 or fo>350 or fo < 140):
         fo=0
     return fo
 
 
 
-def harmonicProductSpectrum(noteData, fs,form="fft", hNro=4):
+def harmonicProductSpectrum(noteData, fs,gender, form="fft", hNro=4):
     fo = 0
     # aplico ventana
     window = np.hanning(len(noteData))
@@ -138,8 +140,10 @@ def harmonicProductSpectrum(noteData, fs,form="fft", hNro=4):
         plt.plot(peaks, np.array(hpsArray)[peaks], "x")
     plt.show()"""
 
-    if fo > 500 or fo<80:
-      fo= 0
+    if gender == "MALE" and (fo > 350 or fo<70):
+      fo = 0
+    if gender== "FEMALE" and (fo > 350 or fo < 140)
+      fo = 0
     return fo
 
 
@@ -189,7 +193,7 @@ def differenceFunction(data, tauMax, fs, form='fft'):
 #Taumax is defined depending if this algorithm is used with a female or male speaker
 #For males Taumax=650
 #For females Taumax=350
-def YIN(data, fs, tauMax=1 / 40, form='cumsum', th=0.13):
+def YIN(data, fs, tauMax=1 / 40, gender, form='cumsum', th=0.13):
 
     # let s call len(data) = w
     # we will start by calculating DF = sum(j = 1, w, (x(j) - x(j+tau))^2)
@@ -250,11 +254,17 @@ def YIN(data, fs, tauMax=1 / 40, form='cumsum', th=0.13):
     else:
         n=np.argmax(np.multiply(-1, cmdf))
     #plt.show()
-    if n > 0 and n<fs/80:
+    if gender == "MALE" n > 0 and n<fs/70:
         fo = fs / n
     else:
         fo = 0
-    if fo>400:
+    
+    if gender == "FEMALE" n > 0 and n<fs/140:
+        fo = fs / n
+    else:
+        fo = 0
+    
+    if fo>350:
         fo=0
 
     return fo
@@ -315,7 +325,7 @@ def is_voiced(window):
     return True
 
 
-def assign_pitch(data_in, fs, segments, algorithm):
+def assign_pitch(data_in, fs, segments, algorithm, gender):
     n_windows = len(segments[:])
     notes_fo = np.zeros(n_windows, dtype=int)
     freqs_fo = np.zeros(n_windows, dtype=int)
@@ -323,7 +333,7 @@ def assign_pitch(data_in, fs, segments, algorithm):
     for i in range(0, n_windows):
         #print("De ",segments[i][0]/fs,"sec a ", segments[i][1]/fs," sec")
         if segments[i][0] == 1:
-            f = algorithm(data_in[segments[i][1]:segments[i][2]], fs)
+            f = algorithm(data_in[segments[i][1]:segments[i][2]], fs,gender)
             freqs_fo[i] = f
             notes_fo[i] = freqToPitch(freqs_fo[i])
         else:
