@@ -9,7 +9,7 @@ def notes_segmentation(signal_len,vda_segs, fs, window_seconds, overlap_seconds)
     n_max_freq = int(fs/500)
     
     df=pd.DataFrame(vda_segs)
-    voice_segs=df[df[0] != "noEnergy"].to_numpy()
+    voice_segs=df[df[0] != "noEnergy"][df[0] != "noise"].to_numpy()
     dim=voice_segs.shape
 
     i = 0
