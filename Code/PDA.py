@@ -202,7 +202,7 @@ def YIN(data, fs, gender,  tauMax=1 / 40, form='cumsum', th=0.13):
     # where power = sum(j = 1, w, x^2(j))
     # and z(tau) = sum(j = 1, w, x^2(j+w))
     t = int(fs * tauMax)
-    t=len(data)
+    
     power = 0
     sub_powers = list()
 
