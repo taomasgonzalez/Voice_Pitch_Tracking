@@ -254,12 +254,12 @@ def YIN(data, fs, tauMax=1 / 40, gender, form='cumsum', th=0.13):
     else:
         n=np.argmax(np.multiply(-1, cmdf))
     #plt.show()
-    if gender == "MALE" n > 0 and n<fs/70:
+    if gender == "MALE" and n > 0 and n<fs/70:
         fo = fs / n
     else:
         fo = 0
     
-    if gender == "FEMALE" n > 0 and n<fs/140:
+    if gender == "FEMALE" and n > 0 and n<fs/140:
         fo = fs / n
     else:
         fo = 0
