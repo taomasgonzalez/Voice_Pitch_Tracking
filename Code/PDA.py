@@ -193,7 +193,7 @@ def differenceFunction(data, tauMax, fs, form='fft'):
 #Taumax is defined depending if this algorithm is used with a female or male speaker
 #For males Taumax=650
 #For females Taumax=350
-def YIN(data, fs, tauMax=1 / 40, gender, form='cumsum', th=0.13):
+def YIN(data, fs, gender,  tauMax=1 / 40, form='cumsum', th=0.13):
 
     # let s call len(data) = w
     # we will start by calculating DF = sum(j = 1, w, (x(j) - x(j+tau))^2)
