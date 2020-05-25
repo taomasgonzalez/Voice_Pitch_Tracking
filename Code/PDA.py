@@ -277,7 +277,7 @@ def YIN(data, fs, gender,  tauMax=1 / 40, form='cumsum', th=0.13):
     
     if fo>210 and gender == "MALE":
         fo = 0
-    if fo>290 and gender == "FEMALE"
+    if fo>290 and gender == "FEMALE":
         fo = 0
 
     return fo
