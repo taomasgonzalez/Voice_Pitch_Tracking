@@ -22,7 +22,7 @@ def sgn(data):
     max2 = np.amax(auxData2)
     max = min(max1, max2)
     # max = np.amax(data)
-    Cl = 0.70 * max
+    Cl = 0.68 * max
     # aplico transformacion
     data = np.array(data)
     for i in range(0, len(data)):
@@ -58,24 +58,35 @@ def autocorrelationAlgorithm(noteData, fs, gender, clippingStage=True):
     correlation = correlation[correlation.size // 2:]
 
     # busco primer maximo
-    max = 0.5* np.amax(correlation)
-    peaks, _ = find_peaks(correlation, height=max, distance=21)
+    max = 0.3* np.amax(correlation)
+    peaks, _ = find_peaks(correlation[150:], height=max, distance=21)
 
     """plt.plot(correlation)
-    print(peaks)
     if len(peaks) > 0:
-      plt.plot(peaks, correlation[peaks], "x")
+      plt.plot(peaks+150, correlation[peaks+150], "x")
     plt.show()"""
 
+
     if len(peaks) > 0:
-        xMax = peaks[0]
+        xMax = peaks[0]+150
     else:
         xMax = -fs
+
+    sec_peak= 0
+    for k in range(len(peaks)):
+      if (peaks[k]+150) < (peaks[0]+150)*2.3 and (peaks[k]+150) > (peaks[0]+150)*1.7:
+        sec_peak=peaks[k]
+        ratio = correlation[sec_peak+150]/correlation[peaks[0]+150]
+        #print(ratio)
+        if ratio< 2 and ratio > 0.9:
+            xMax =sec_peak+150
+        break
+    #print(xMax)
     # determino frequencia
     fo = fs / xMax
-    if gender == "MALE"  and (fo == -1 or fo>350 or fo < 30):
+    if gender == "MALE"  and (fo == -1 or fo>210 or fo < 30):
         fo=0
-    if gender == "FEMALE"  and (fo == -1 or fo>350 or fo < 130):
+    if gender == "FEMALE"  and (fo == -1 or fo>290 or fo < 130):
         fo=0
     return fo
 
@@ -140,9 +151,9 @@ def harmonicProductSpectrum(noteData, fs,gender, form="fft", hNro=4):
         plt.plot(peaks, np.array(hpsArray)[peaks], "x")
     plt.show()"""
 
-    if gender == "MALE" and (fo > 350 or fo<30):
+    if gender == "MALE" and (fo > 210 or fo<30):
       fo = 0
-    if gender== "FEMALE" and (fo > 350 or fo < 130):
+    if gender== "FEMALE" and (fo > 290 or fo < 130):
       fo = 0
     return fo
 
@@ -264,8 +275,10 @@ def YIN(data, fs, gender,  tauMax=1 / 40, form='cumsum', th=0.13):
     else:
         fo = 0
     
-    if fo>350:
-        fo=0
+    if fo>210 and gender == "MALE":
+        fo = 0
+    if fo>290 and gender == "FEMALE"
+        fo = 0
 
     return fo
 
