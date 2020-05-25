@@ -84,9 +84,9 @@ def autocorrelationAlgorithm(noteData, fs, gender, clippingStage=True):
     #print(xMax)
     # determino frequencia
     fo = fs / xMax
-    if gender == "MALE"  and (fo == -1 or fo>210 or fo < 30):
+    if gender == "MALE"  and (fo == -1 or fo>220 or fo < 30):
         fo=0
-    if gender == "FEMALE"  and (fo == -1 or fo>290 or fo < 130):
+    if gender == "FEMALE"  and (fo == -1 or fo>315 or fo < 130):
         fo=0
     return fo
 
@@ -151,9 +151,9 @@ def harmonicProductSpectrum(noteData, fs,gender, form="fft", hNro=4):
         plt.plot(peaks, np.array(hpsArray)[peaks], "x")
     plt.show()"""
 
-    if gender == "MALE" and (fo > 210 or fo<30):
+    if gender == "MALE" and (fo > 220 or fo<30):
       fo = 0
-    if gender== "FEMALE" and (fo > 290 or fo < 130):
+    if gender== "FEMALE" and (fo > 315 or fo < 130):
       fo = 0
     return fo
 
@@ -275,9 +275,9 @@ def YIN(data, fs, gender,  tauMax=1 / 40, form='cumsum', th=0.13):
     else:
         fo = 0
     
-    if fo>210 and gender == "MALE":
+    if fo>220 and gender == "MALE":
         fo = 0
-    if fo>290 and gender == "FEMALE":
+    if fo>315 and gender == "FEMALE":
         fo = 0
 
     return fo
