@@ -142,7 +142,7 @@ def harmonicProductSpectrum(noteData, fs,gender, form="fft", hNro=4):
 
     if gender == "MALE" and (fo > 350 or fo<70):
       fo = 0
-    if gender== "FEMALE" and (fo > 350 or fo < 140)
+    if gender== "FEMALE" and (fo > 350 or fo < 140):
       fo = 0
     return fo
 
