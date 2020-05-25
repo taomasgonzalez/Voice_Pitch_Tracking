@@ -17,13 +17,16 @@ def notes_segmentation(signal_len,vda_segs, fs, window_seconds, overlap_seconds)
 
     while True:
       
-      if (i + n_samples + n_max_freq) < signal_len:
+      #if (i + n_samples + n_max_freq) < signal_len:
+      if (i + n_samples ) < signal_len:
         voiced=0
         for j in range(dim[0]):
-          if  i + n_samples+n_max_freq <voice_segs[j][2]*fs and  i + n_samples+n_max_freq > voice_segs[j][1]*fs:
+          if  i + n_samples <voice_segs[j][2]*fs and  i + n_samples > voice_segs[j][1]*fs:
+          if  i + n_samples <voice_segs[j][2]*fs and  i + n_samples > voice_segs[j][1]*fs:
             voiced=1
             break
-        segments.append([voiced,i, i + n_samples+n_max_freq])
+        #segments.append([voiced,i, i + n_samples+n_max_freq])
+        segments.append([voiced,i, i + n_samples])
         i += n_overlap
       else:
         break
