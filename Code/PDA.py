@@ -353,7 +353,7 @@ def is_voiced(window):
     return True
 
 
-def assign_pitch(data_in, fs, segments, algorithm):
+def assign_pitch(data_in, fs, segments, gender, algorithm ):
     n_windows = len(segments[:])
     notes_fo = np.zeros(n_windows, dtype=int)
     freqs_fo = np.zeros(n_windows, dtype=int)
@@ -361,7 +361,7 @@ def assign_pitch(data_in, fs, segments, algorithm):
     for i in range(0, n_windows):
         #print("De ",segments[i][0]/fs,"sec a ", segments[i][1]/fs," sec")
         if segments[i][0] == 1:
-            f = algorithm(data_in[segments[i][1]:segments[i][2]], fs)
+            f = algorithm(data_in[segments[i][1]:segments[i][2]], fs, gender)
             freqs_fo[i] = f
             notes_fo[i] = freqToPitch(freqs_fo[i])
         else:
