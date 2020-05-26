@@ -268,8 +268,8 @@ def YIN(data, fs, gender, tauMax=1 / 40, form='cumsum', th=0.6):
     # plt.plot(cmdf)
     # print("Amount of peaks above th: ", len(peaks))
     tot_peaks = find_peaks(cmdf, -12)[0]
-    print("Amount of peaks total: ", len(tot_peaks))
-    print("Energy: ", power)
+    #print("Amount of peaks total: ", len(tot_peaks))
+    #print("Energy: ", power)
     peaks = np.array(peaks)
     peaks = peaks[peaks > 80]
 
