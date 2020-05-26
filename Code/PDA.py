@@ -162,8 +162,13 @@ def differenceFunction(data, tauMax, fs, form='fft'):
 #Taumax is defined depending if this algorithm is used with a female or male speaker
 #For males Taumax=650
 #For females Taumax=350
-def YIN(data, fs, tauMax=1 / 40, form='cumsum', th=0.13):
-
+def YIN(data, fs, gender, tauMax=1 / 40, form='cumsum', th=0.6):
+    if gender == 'MALE':
+        th = 1
+        cross_th = 25
+    else:
+        th = 0.3
+        cross_th = 40
     # let s call len(data) = w
     # we will start by calculating DF = sum(j = 1, w, (x(j) - x(j+tau))^2)
     # DF = sum(j=1, w, x(j) ^ 2) -2 * sum(j=1, w, x(j)*x(j+tau)) + sum(j=1, w, x(j+tau) ^ 2)
@@ -171,12 +176,12 @@ def YIN(data, fs, tauMax=1 / 40, form='cumsum', th=0.13):
     # where power = sum(j = 1, w, x^2(j))
     # and z(tau) = sum(j = 1, w, x^2(j+w))
     t = int(fs * tauMax)
-    t=len(data)
+
     power = 0
     sub_powers = list()
 
     for i in range(1, len(data)):
-        power += data[i]**2
+        power += data[i] ** 2
 
     # z(tau) = sum(j = 1, w, x^2(j+w)) = sum(j = tau + 1, w + tau, x^2(j))
     # z(tau) = sum(j = tau + 1, w, x^2(j)) as x(w+1) = 0 and so on...
@@ -184,13 +189,13 @@ def YIN(data, fs, tauMax=1 / 40, form='cumsum', th=0.13):
     # z(tau) = sum(j=1, w, x ^ 2(j)) - sum(j=1, tau, x ^ 2(j))
     # z(tau) = power - sum(j=1, tau, x ^ 2(j))
     # tau can take values from tau = 1 to t
-    sub_powers.append(0)       # j = 0, no power just in case.
-    sub_powers.append(power - data[1]**2)
+    sub_powers.append(0)  # j = 0, no power just in case.
+    sub_powers.append(power - data[1] ** 2)
 
     for i in range(2, t):
 
         if i < len(data):
-            sub_powers.append(sub_powers[i-1] - data[i-1]**2)
+            sub_powers.append(sub_powers[i - 1] - data[i - 1] ** 2)
         else:
             # may be optimized filling the rest with zeroes directly
             sub_powers.append(0)
@@ -214,22 +219,42 @@ def YIN(data, fs, tauMax=1 / 40, form='cumsum', th=0.13):
 
     # find fundamental frequency
     n = 0
-    #cmdf=cmdf[::-1]
-    peaks, _  = find_peaks(np.multiply(-1, cmdf), -th)
-    #plt.plot(np.multiply(-1, cmdf))
-    if len(peaks) > 0:
-        n = peaks[0]
-    #    plt.plot(peaks, np.multiply(-1, cmdf)[peaks], "x")
-    else:
-        n=np.argmax(np.multiply(-1, cmdf))
-    #plt.show()
-    if n > 0 and n<350:
+
+    # find all peaks below th
+    # peaks, _  = find_peaks(np.multiply(-1, cmdf), -th)
+    cmdf = np.multiply(-1, cmdf)
+    peaks, _ = find_peaks(cmdf[0:600], -th)
+
+    # plt.plot(cmdf)
+    # print("Amount of peaks above th: ", len(peaks))
+    tot_peaks = find_peaks(cmdf, -12)[0]
+    print("Amount of peaks total: ", len(tot_peaks))
+    print("Energy: ", power)
+    peaks = np.array(peaks)
+    peaks = peaks[peaks > 80]
+
+    if len(peaks) > 0 and len(tot_peaks) < cross_th:
+        # plt.plot(peaks, cmdf[peaks], "x")
+        aux_max = -1
+
+        for p in peaks:
+            if cmdf[p] > aux_max:
+                aux_max = cmdf[p]
+                n = p
+
+    # plt.show()
+
+    if gender == "MALE" and n > 0 and n < fs / 30:
+        fo = fs / n
+    elif gender == "FEMALE" and n > 0 and n < fs / 130:
         fo = fs / n
     else:
         fo = 0
-    if fo>400:
-        fo=0
 
+    if fo > 220 and gender == "MALE":
+        fo = 0
+    if fo > 315 and gender == "FEMALE":
+        fo = 0
     return fo
 
 
