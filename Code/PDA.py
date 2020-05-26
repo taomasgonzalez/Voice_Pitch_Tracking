@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.signal import fftconvolve, find_peaks, decimate
 from scipy.fftpack import rfft, irfft, ifftshift
+from scipy.fft import dct
 from collections import deque
 import matplotlib.pyplot as plt
 import os
@@ -21,7 +22,7 @@ def sgn(data):
     max2 = np.amax(auxData2)
     max = min(max1, max2)
     # max = np.amax(data)
-    Cl = 0.70 * max
+    Cl = 0.68 * max
     # aplico transformacion
     data = np.array(data)
     for i in range(0, len(data)):
@@ -36,7 +37,7 @@ def sgn(data):
 
 # Si no encuentra frecuencia fundamental, devuelve fo = 44100
 # Cuanto mas grande noteData mejor la aproximacion a la fpitch (aprox 3000 minimo)
-def autocorrelationAlgorithm(noteData, fs, clippingStage=True):
+def autocorrelationAlgorithm(noteData, fs, gender, clippingStage=True):
     fo = 0
     # selecciono mejor parte de la nota
     # plt.figure(1)
@@ -57,33 +58,49 @@ def autocorrelationAlgorithm(noteData, fs, clippingStage=True):
     correlation = correlation[correlation.size // 2:]
 
     # busco primer maximo
-    max = 0.5* np.amax(correlation)
-    peaks, _ = find_peaks(correlation, height=max, distance=21)
+    max = 0.3* np.amax(correlation)
+    peaks, _ = find_peaks(correlation[150:], height=max, distance=21)
 
     """plt.plot(correlation)
-    print(peaks)
     if len(peaks) > 0:
-      plt.plot(peaks, correlation[peaks], "x")
+      plt.plot(peaks+150, correlation[peaks+150], "x")
     plt.show()"""
 
+
     if len(peaks) > 0:
-        xMax = peaks[0]
+        xMax = peaks[0]+150
     else:
         xMax = -fs
+
+    sec_peak= 0
+    for k in range(len(peaks)):
+      if (peaks[k]+150) < (peaks[0]+150)*2.3 and (peaks[k]+150) > (peaks[0]+150)*1.7:
+        sec_peak=peaks[k]
+        ratio = correlation[sec_peak+150]/correlation[peaks[0]+150]
+        #print(ratio)
+        if ratio< 2 and ratio > 0.9:
+            xMax =sec_peak+150
+        break
+    #print(xMax)
     # determino frequencia
     fo = fs / xMax
-    if fo == -1 or fo>500:
+    if gender == "MALE"  and (fo == -1 or fo>220 or fo < 30):
+        fo=0
+    if gender == "FEMALE"  and (fo == -1 or fo>315 or fo < 130):
         fo=0
     return fo
 
 
-def harmonicProductSpectrum(noteData, fs, hNro=7):
+def harmonicProductSpectrum(noteData, fs,gender, form="dct", hNro=3):
     fo = 0
     # aplico ventana
     window = np.hanning(len(noteData))
     noteData = np.multiply(window, noteData)
     # fft de los datos
-    fftData = rfft(noteData)
+    if form=="fft":
+      fftData =rfft(noteData)
+    elif form=="dct":
+      fftData = dct(noteData)
     fftData = abs(fftData[:])
     k = np.arange(len(noteData))
     T = (2 * len(noteData)) / fs
@@ -113,7 +130,30 @@ def harmonicProductSpectrum(noteData, fs, hNro=7):
     for i in range(0, index):
         hpsArray[i] = 0
     # busco frecuencia del maximo de la nueva funcion
-    fo = fftF[np.argmax(hpsArray)]
+    max_hps = np.argmax(hpsArray)
+    fo = fftF[max_hps]
+    peaks, _  = find_peaks(hpsArray, height=hpsArray[max_hps]*0.7)
+    sec_peak= 0
+    for k in range(len(peaks)):
+      if peaks[k] < max_hps*0.75 and peaks[k] > max_hps*0.25:
+        sec_peak=peaks[k]
+        ratio = np.array(hpsArray)[sec_peak]/np.array(hpsArray)[max_hps]
+        #print(ratio)
+        if ratio< 0.85 and ratio > 0.7:
+            fo =fftF[sec_peak]
+        break
+
+    """plt.plot(hpsArray[0:50])
+    if len(peaks) > 0:
+        print(peaks)
+        plt.plot(peaks, np.array(hpsArray)[peaks], "x")
+    plt.show()
+    plt.plot()"""
+
+    if gender == "MALE" and (fo > 220 or fo<50):
+      fo = 0
+    if gender== "FEMALE" and (fo > 315 or fo < 130):
+      fo = 0
     return fo
 
 
